@@ -1,119 +1,87 @@
 package model;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Classe Model del patró MVC.
- * Encapsula l’estat actual de l’aplicació, incloent-hi la selecció
- * d’idiomes, els resultats de comparacions i la càrrega de diccionaris.
- *
- * Aquesta classe no conté lògica de comparació, només gestiona dades.
- *
- * @author tonitorres
- */
 public class Model {
 
-    /** Idioma origen seleccionat per a la comparació. */
-    private String idiomaOrigen;
+    private int[][] matriuDistancies;
+    private List<Integer> millorRuta;
+    private int costRuta;
+    private int nodesExplorats;
+    private int nodesPresents;
+    private int nodesPresentsTotals;
+    private int numCiutats;
+    private int maxCost;
 
-    /** Idioma destí seleccionat (en cas de comparació puntual). */
-    private String idiomaDesti;
-
-    /** Llista de resultats de comparacions realitzades. */
-    private List<ResultatComparacio> resultats;
-
-    /**
-     * Defineix els idiomes seleccionats per a una comparació.
-     *
-     * @param iOrigen codi de l'idioma origen
-     * @param iDesti  codi de l'idioma destí
-     */
-    public void setIdiomes(String iOrigen, String iDesti) {
-        idiomaOrigen = iOrigen;
-        idiomaDesti = iDesti;
+    public void setMaxCost(int value) {
+        maxCost = value;
     }
 
-    /**
-     * Retorna l'idioma origen actual.
-     */
-    public String getIdiomaOrigen() {
-        return idiomaOrigen;
+    public int getMaxCost() {
+        return maxCost;
     }
 
-    /**
-     * Retorna l'idioma destí actual.
-     */
-    public String getIdiomaDesti() {
-        return idiomaDesti;
+    public void setNumCiutats(int value) {
+        numCiutats = value;
     }
 
-    /**
-     * Retorna la llista de resultats múltiples de comparació.
-     */
-    public List<ResultatComparacio> getResultatsMultiples() {
-        return resultats;
+    public int getNumCiutats() {
+        return numCiutats;
     }
 
-    /**
-     * Neteja la llista de resultats per començar una nova comparació.
-     */
-    public void resetResultats() {
-        resultats = new ArrayList<>();
+    public void setMatriuDistancies(int[][] matriu) {
+        this.matriuDistancies = matriu;
     }
 
-    /**
-     * Assigna directament una nova llista de resultats.
-     *
-     * @param r nova llista de resultats
-     */
-    public void setResultats(List<ResultatComparacio> r) {
-        resultats = r;
+    public int[][] getMatriuDistancies() {
+        return matriuDistancies;
     }
 
-    /**
-     * Afegeix un resultat individual a la llista.
-     *
-     * @param r resultat a afegir
-     */
-    public void afegirResultats(ResultatComparacio r) {
-        resultats.add(r);
+    public void setMillorRuta(List<Integer> ruta) {
+        this.millorRuta = ruta;
     }
 
-    /**
-     * Carrega els diccionaris dels idiomes indicats des de la carpeta
-     * "diccionaris".
-     *
-     * @param idiomes llista de codis d'idioma
-     *
-     * @return llista d'objectes Idioma amb les paraules carregades
-     */
-    public List<Idioma> carregarDiccionaris(List<String> idiomes) {
-        List<Idioma> diccionaris = new ArrayList<>();
+    public List<Integer> getMillorRuta() {
+        return millorRuta;
+    }
 
-        File carpeta = new File("diccionaris");
+    public void setCostRuta(int cost) {
+        this.costRuta = cost;
+    }
 
-        File[] fitxers = carpeta.listFiles((dir, name)
-                -> idiomes.contains(name.replace(".txt", ""))
-        );
+    public int getCostRuta() {
+        return costRuta;
+    }
 
-        for (File fitxer : fitxers) {
-            try {
-                System.out.println("Carregant el fitxer " + fitxer.getName());
+    public void setNodesExplorats(int nodes) {
+        this.nodesExplorats = nodes;
+    }
 
-                List<String> paraules = Files.readAllLines(fitxer.toPath());
-                String nom = fitxer.getName().substring(0, 3);
-                diccionaris.add(new Idioma(nom, paraules));
+    public int getNodesExplorats() {
+        return nodesExplorats;
+    }
 
-                System.out.println("Carregat!");
-            } catch (IOException e) {
-                System.out.println("Error llegint el fitxer: " + fitxer.getName());
-            }
-        }
+    public void setNodesPresents(int nodes) {
+        this.nodesPresents = nodes;
+    }
 
-        return diccionaris;
+    public int getNodesPresents() {
+        return nodesPresents;
+    }
+
+    public void setNodesPresentsTotals(int nodes) {
+        this.nodesPresentsTotals = nodes;
+    }
+
+    public int getNodesPresentsTotals() {
+        return nodesPresentsTotals;
+    }
+
+    public void reset() {
+        millorRuta = null;
+        costRuta = -1;
+        nodesExplorats = 0;
+        nodesPresents = 0;
+        nodesPresentsTotals = 0;
     }
 }
