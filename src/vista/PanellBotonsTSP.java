@@ -56,6 +56,16 @@ public class PanellBotonsTSP extends JPanel {
         JButton botoResoldre = new JButton("Resoldre TSP");
         botoResoldre.addActionListener(e -> controlador.notificar(Notificacio.RESOLDRE_TSP));
 
+        JCheckBox checkMostrarCostos = new JCheckBox("Mostrar costos", false);
+        add(checkMostrarCostos);
+
+        // Cal afegir una referència al panell gràfic per controlar-lo
+        checkMostrarCostos.addActionListener(e -> {
+            boolean mostrar = checkMostrarCostos.isSelected();
+            Vista vista = (Vista) SwingUtilities.getWindowAncestor(this);
+            vista.setMostrarCostosArcs(mostrar);
+        });
+
         add(botoGenerar);
         add(botoResoldre);
     }

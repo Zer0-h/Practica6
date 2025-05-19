@@ -51,9 +51,14 @@ public class Vista extends JFrame implements Notificar {
         panellEstadistiques.actualitzarEstadistiques(
             model.getCostRuta(),
             model.getNodesExplorats(),
-            model.getNodesPresents()
+            model.getNodesPresents(),
+            model.getMillorRuta()
         );
 
+    }
+
+    public void setMostrarCostosArcs(boolean mostrar) {
+        panellGraf.setMostrarCostos(mostrar);
     }
 
     @Override
