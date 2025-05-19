@@ -4,6 +4,17 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/C:/Users/Zer0/Documents/GitHub/Practica6/src/model/Model.java</file>
+            <file>file:/C:/Users/Zer0/Documents/GitHub/Practica6/src/controlador/Controlador.java</file>
+            <file>file:/C:/Users/Zer0/Documents/GitHub/Practica6/src/vista/PanellEstadistiques.java</file>
+            <file>file:/C:/Users/Zer0/Documents/GitHub/Practica6/src/model/NodeTSP.java</file>
+            <file>file:/C:/Users/Zer0/Documents/GitHub/Practica6/src/vista/PanellBotonsTSP.java</file>
+            <file>file:/C:/Users/Zer0/Documents/GitHub/Practica6/src/model/ResultatTSP.java</file>
+            <file>file:/C:/Users/Zer0/Documents/GitHub/Practica6/src/model/GeneradorGraf.java</file>
+            <file>file:/C:/Users/Zer0/Documents/GitHub/Practica6/src/vista/PanellGrafTSP.java</file>
+            <file>file:/C:/Users/Zer0/Documents/GitHub/Practica6/src/vista/Vista.java</file>
+            <file>file:/C:/Users/Zer0/Documents/GitHub/Practica6/src/model/ProcessTSP.java</file>
+            <file>file:/C:/Users/Zer0/Documents/GitHub/Practica6/src/model/BranchAndBoundTSP.java</file>
+            <file>file:/C:/Users/Zer0/Documents/GitHub/Practica6/src/controlador/Notificacio.java</file>
         </group>
     </open-files>
 </project-private>

@@ -1,37 +1,47 @@
 package model;
 
-import java.util.Random;
+import java.util.*;
 
-/**
- * Classe encarregada de generar matrius d'adjacència aleatòries
- * per al problema del viatjant de comerç (TSP).
- *
- * La matriu generada representa un graf complet, dirigit i amb pesos positius.
- * Els arcs (i,i) es marquen com a ∞ (valor molt alt).
- *
- * @author tonitorres
- */
 public class GeneradorGraf {
 
     private static final int INFINIT = Integer.MAX_VALUE / 2;
+    private static final Random random = new Random();
 
     /**
-     * Genera una matriu de distàncies aleatòria.
+     * Genera una matriu de distàncies amb una ruta vàlida garantida.
      *
      * @param n nombre de ciutats
-     * @param maxCost valor màxim de les distàncies
-     * @return matriu de distàncies n x n
+     * @param maxCost cost màxim entre ciutats
+     * @param densitat probabilitat (entre 0 i 1) d’afegir connexions aleatòries
+     * @return matriu d’adjacència dirigida amb valors > 0 o INFINIT
      */
-    public static int[][] generarMatriu(int n, int maxCost) {
+    public static int[][] generarMatriu(int n, int maxCost, double densitat) {
         int[][] matriu = new int[n][n];
-        Random rand = new Random();
 
+        // Inicialitzem tot a INFINIT (no connectat)
+        for (int i = 0; i < n; i++) {
+            Arrays.fill(matriu[i], INFINIT);
+        }
+
+        // Ruta Hamiltoniana base
+        List<Integer> ruta = new ArrayList<>();
+        for (int i = 0; i < n; i++) ruta.add(i);
+        Collections.shuffle(ruta);
+
+        for (int i = 0; i < n - 1; i++) {
+            int from = ruta.get(i);
+            int to = ruta.get(i + 1);
+            matriu[from][to] = costAleatori(maxCost);
+        }
+
+        // Tancar el cicle (últim → primer)
+        matriu[ruta.get(n - 1)][ruta.get(0)] = costAleatori(maxCost);
+
+        // Afegir connexions aleatòries segons la densitat
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                if (i == j) {
-                    matriu[i][j] = INFINIT;
-                } else {
-                    matriu[i][j] = rand.nextInt(maxCost - 1) + 1;
+                if (i != j && matriu[i][j] == INFINIT && random.nextDouble() < densitat) {
+                    matriu[i][j] = costAleatori(maxCost);
                 }
             }
         }
@@ -39,11 +49,10 @@ public class GeneradorGraf {
         return matriu;
     }
 
-    /**
-     * Mostra la matriu per pantalla (per debug o proves).
-     *
-     * @param matriu la matriu de distàncies a imprimir
-     */
+    private static int costAleatori(int max) {
+        return random.nextInt(max - 1) + 1; // entre 1 i max-1
+    }
+
     public static void imprimirMatriu(int[][] matriu) {
         int n = matriu.length;
         System.out.println("Matriu de distàncies:");

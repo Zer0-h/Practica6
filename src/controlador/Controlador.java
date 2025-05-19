@@ -21,7 +21,8 @@ public class Controlador implements Notificar {
 
     private void generarGraf() {
         model.reset();
-        int[][] matriu = GeneradorGraf.generarMatriu(model.getNumCiutats(), model.getMaxCost());
+        System.out.println("Densitat: " + model.getDensitat());
+        int[][] matriu = GeneradorGraf.generarMatriu(model.getNumCiutats(), model.getMaxCost(), model.getDensitat());
         model.setMatriuDistancies(matriu);
         notificar(Notificacio.PINTAR_GRAF);
     }

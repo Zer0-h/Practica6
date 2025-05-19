@@ -26,12 +26,30 @@ public class PanellBotonsTSP extends JPanel {
         JSpinner spinnerCost = new JSpinner(new SpinnerNumberModel(100, 10, 999, 10));
         add(spinnerCost);
 
+        add(new JLabel("Densitat:"));
+
+        JSlider sliderDensitat = new JSlider(0, 100, 40);
+        sliderDensitat.setMajorTickSpacing(25);
+        sliderDensitat.setMinorTickSpacing(5);
+        sliderDensitat.setPaintTicks(true);
+        sliderDensitat.setPaintLabels(true);
+        add(sliderDensitat);
+
+        JLabel labelValorDensitat = new JLabel("40%");
+        add(labelValorDensitat);
+
+        sliderDensitat.addChangeListener(e -> {
+            int valor = sliderDensitat.getValue();
+            labelValorDensitat.setText(valor + "%");
+        });
+
         JButton botoGenerar = new JButton("Generar graf");
         botoGenerar.addActionListener(e -> {
             Model model = controlador.getModel();
 
             model.setNumCiutats((int) spinnerCiutats.getValue());
             model.setMaxCost((int) spinnerCost.getValue());
+            model.setDensitat(sliderDensitat.getValue() / 100.0);
             controlador.notificar(Notificacio.GENERAR_GRAF);
         });
 

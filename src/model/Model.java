@@ -12,6 +12,7 @@ public class Model {
     private int nodesPresentsTotals;
     private int numCiutats;
     private int maxCost;
+    private double densitat;
 
     public void setMaxCost(int value) {
         maxCost = value;
@@ -83,5 +84,14 @@ public class Model {
         nodesExplorats = 0;
         nodesPresents = 0;
         nodesPresentsTotals = 0;
+    }
+
+
+    public double getDensitat() {
+        return densitat;
+    }
+
+    public void setDensitat(double densitat) {
+        this.densitat = densitat;
     }
 }
