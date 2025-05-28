@@ -1,13 +1,9 @@
 package vista;
 
-import java.awt.GridLayout;
 import javax.swing.*;
+import java.awt.*;
 import java.util.List;
 
-/**
- * Panell inferior per mostrar estadístiques del càlcul del TSP.
- * S'actualitza quan es troba una solució.
- */
 public class PanellEstadistiques extends JPanel {
 
     private final JLabel labelCost;
@@ -16,25 +12,31 @@ public class PanellEstadistiques extends JPanel {
     private final JTextArea areaRuta;
 
     public PanellEstadistiques() {
-        setLayout(new GridLayout(1, 3, 20, 10));
+        setLayout(new BorderLayout());
         setBorder(BorderFactory.createTitledBorder("Estadístiques"));
 
+        JPanel panellDades = new JPanel(new GridLayout(1, 3, 20, 10));
         labelCost = new JLabel("Cost total: -");
         labelExplorats = new JLabel("Nodes explorats: -");
         labelPresents = new JLabel("Nodes presents: -");
+        panellDades.add(labelCost);
+        panellDades.add(labelExplorats);
+        panellDades.add(labelPresents);
+
+        add(panellDades, BorderLayout.NORTH);
+
         areaRuta = new JTextArea("Ruta òptima: -");
         areaRuta.setEditable(false);
         areaRuta.setLineWrap(false);
         areaRuta.setWrapStyleWord(false);
+        areaRuta.setFont(new Font("Monospaced", Font.PLAIN, 12));
 
         JScrollPane scroll = new JScrollPane(areaRuta);
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+        scroll.setPreferredSize(new Dimension(100, 40));
 
-        add(labelCost);
-        add(labelExplorats);
-        add(labelPresents);
-        add(scroll);
+        add(scroll, BorderLayout.CENTER);
     }
 
     public void actualitzarRuta(List<Integer> ruta) {
@@ -50,6 +52,7 @@ public class PanellEstadistiques extends JPanel {
             if (i < ruta.size() - 1) sb.append(" → ");
         }
         areaRuta.setText(sb.toString());
+        areaRuta.setCaretPosition(0); // mou el scroll al principi
     }
 
     public void actualitzarEstadistiques(int cost, int explorats, int presents, List<Integer> ruta) {
