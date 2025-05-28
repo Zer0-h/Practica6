@@ -43,6 +43,7 @@ public class Vista extends JFrame implements Notificar {
     public void pintarGraf() {
         Model model = controlador.getModel();
         panellGraf.actualitzarGraf(model.getMatriuDistancies());
+        panellEstadistiques.reiniciar();
     }
 
     public void pintarResultat() {

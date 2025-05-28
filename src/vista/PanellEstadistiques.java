@@ -13,7 +13,7 @@ public class PanellEstadistiques extends JPanel {
     private final JLabel labelCost;
     private final JLabel labelExplorats;
     private final JLabel labelPresents;
-    private final JLabel labelRuta;
+    private final JTextArea areaRuta;
 
     public PanellEstadistiques() {
         setLayout(new GridLayout(1, 3, 20, 10));
@@ -22,17 +22,24 @@ public class PanellEstadistiques extends JPanel {
         labelCost = new JLabel("Cost total: -");
         labelExplorats = new JLabel("Nodes explorats: -");
         labelPresents = new JLabel("Nodes presents: -");
-        labelRuta = new JLabel("Ruta òptima: -");
+        areaRuta = new JTextArea("Ruta òptima: -");
+        areaRuta.setEditable(false);
+        areaRuta.setLineWrap(false);
+        areaRuta.setWrapStyleWord(false);
+
+        JScrollPane scroll = new JScrollPane(areaRuta);
+        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
 
         add(labelCost);
         add(labelExplorats);
         add(labelPresents);
-        add(labelRuta);
+        add(scroll);
     }
 
     public void actualitzarRuta(List<Integer> ruta) {
         if (ruta == null || ruta.isEmpty()) {
-            labelRuta.setText("Ruta òptima: -");
+            areaRuta.setText("Ruta òptima: -");
             return;
         }
 
@@ -42,13 +49,13 @@ public class PanellEstadistiques extends JPanel {
             sb.append(lletra);
             if (i < ruta.size() - 1) sb.append(" → ");
         }
-        labelRuta.setText(sb.toString());
+        areaRuta.setText(sb.toString());
     }
 
     public void actualitzarEstadistiques(int cost, int explorats, int presents, List<Integer> ruta) {
-        labelCost.setText("Cost total: " + cost);
-        labelExplorats.setText("Nodes explorats: " + explorats);
-        labelPresents.setText("Nodes presents: " + presents);
+        labelCost.setText("Cost total: " + (cost >= 0 ? cost : "-"));
+        labelExplorats.setText("Nodes explorats: " + (explorats >= 0 ? explorats : "-"));
+        labelPresents.setText("Nodes presents: " + (presents >= 0 ? presents : "-"));
         actualitzarRuta(ruta);
     }
 
