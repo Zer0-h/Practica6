@@ -58,7 +58,7 @@ public class Vista extends JFrame implements Notificar {
         add(panellEstadistiques, BorderLayout.SOUTH);
 
         // -- Configuració de la finestra --
-        setSize(1000, 800);
+        setSize(1200, 1000);
         setLocationRelativeTo(null);
         setVisible(true);
     }
