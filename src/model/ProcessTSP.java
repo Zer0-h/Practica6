@@ -4,6 +4,7 @@ import controlador.Controlador;
 import controlador.Notificacio;
 
 import java.util.*;
+import java.util.concurrent.*;
 
 public class ProcessTSP extends Thread {
 
@@ -24,7 +25,6 @@ public class ProcessTSP extends Thread {
             return;
         }
 
-        // Inici del càlcul
         ResultatTSP resultat = resoldreTSP(matriu);
 
         model.setMillorRuta(resultat.getRuta());
@@ -37,9 +37,9 @@ public class ProcessTSP extends Thread {
 
     private ResultatTSP resoldreTSP(int[][] matriuOriginal) {
         int n = matriuOriginal.length;
-        int millorCost = INFINIT;
-        List<Integer> millorCami = new ArrayList<>();
-        int nodesExplorats = 0;
+        final int[] millorCost = {INFINIT};
+        List<Integer> millorCami = Collections.synchronizedList(new ArrayList<>());
+        int[] nodesExplorats = {0};
         int nodesPresents = 0;
 
         PriorityQueue<NodeTSP> cua = new PriorityQueue<>();
@@ -51,57 +51,85 @@ public class ProcessTSP extends Thread {
 
         cua.add(new NodeTSP(camiInicial, matReducida, 0, cotaInicial, 0));
 
+        ExecutorService executor = Executors.newFixedThreadPool(
+                Math.max(2, Runtime.getRuntime().availableProcessors())
+        );
+
         while (!cua.isEmpty()) {
             NodeTSP node = cua.poll();
             nodesPresents++;
 
             if (node.getCami().size() == n) {
                 int costFinal = node.getCost() + matriuOriginal[node.getCiutatActual()][0];
-                if (costFinal < millorCost) {
-                    millorCost = costFinal;
-                    millorCami = new ArrayList<>(node.getCami());
-                    millorCami.add(0);
+                synchronized (millorCost) {
+                    if (costFinal < millorCost[0]) {
+                        millorCost[0] = costFinal;
+                        millorCami.clear();
+                        millorCami.addAll(node.getCami());
+                        millorCami.add(0);
+                    }
                 }
                 continue;
             }
 
+            List<Future<NodeTSP>> futurs = new ArrayList<>();
+
             for (int ciutat = 0; ciutat < n; ciutat++) {
                 if (!node.getCami().contains(ciutat)) {
-                    List<Integer> nouCami = new ArrayList<>(node.getCami());
-                    nouCami.add(ciutat);
+                    final int ciutatFinal = ciutat;
+                    futurs.add(executor.submit(() -> {
+                        List<Integer> nouCami = new ArrayList<>(node.getCami());
+                        nouCami.add(ciutatFinal);
 
-                    int[][] novaMatriu = copiarMatriu(node.getMatriuReduida());
-                    bloquejar(novaMatriu, node.getCiutatActual(), ciutat);
-                    novaMatriu[ciutat][0] = INFINIT;
+                        int[][] novaMatriu = copiarMatriu(node.getMatriuReduida());
+                        bloquejar(novaMatriu, node.getCiutatActual(), ciutatFinal);
+                        novaMatriu[ciutatFinal][0] = INFINIT;
 
-                    int reduccio = calcularReduccio(novaMatriu, n);
-                    int nouCost = node.getCost() + node.getMatriuReduida()[node.getCiutatActual()][ciutat];
-                    int novaCota = nouCost + reduccio;
+                        int reduccio = calcularReduccio(novaMatriu, n);
+                        int nouCost = node.getCost() + node.getMatriuReduida()[node.getCiutatActual()][ciutatFinal];
+                        int novaCota = nouCost + reduccio;
 
-                    if (novaCota < millorCost) {
-                        cua.add(new NodeTSP(nouCami, novaMatriu, nouCost, novaCota, ciutat));
-                        nodesExplorats++;
+                        synchronized (millorCost) {
+                            if (novaCota < millorCost[0]) {
+                                nodesExplorats[0]++;
+                                return new NodeTSP(nouCami, novaMatriu, nouCost, novaCota, ciutatFinal);
+                            }
+                        }
+                        return null;
+                    }));
+                }
+            }
+
+            for (Future<NodeTSP> future : futurs) {
+                try {
+                    NodeTSP fill = future.get();
+                    if (fill != null) {
+                        cua.add(fill);
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }
 
-        return new ResultatTSP(millorCami, millorCost, nodesExplorats, nodesPresents);
+        executor.shutdown();
+
+        return new ResultatTSP(millorCami, millorCost[0], nodesExplorats[0], nodesPresents);
     }
 
-    // -- Mètodes auxiliars --
     private void bloquejar(int[][] matriu, int fila, int columna) {
         Arrays.fill(matriu[fila], INFINIT);
-        for (int[] matriu1 : matriu) {
-            matriu1[columna] = INFINIT;
+        for (int i = 0; i < matriu.length; i++) {
+            matriu[i][columna] = INFINIT;
         }
     }
 
     private int[][] copiarMatriu(int[][] original) {
-        int[][] copia = new int[original.length][original[0].length];
-        for (int i = 0; i < original.length; i++) {
-            System.arraycopy(original[i], 0, copia[i], 0, original[i].length);
-        }
+        int n = original.length;
+        int[][] copia = new int[n][n];
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                copia[i][j] = original[i][j];
         return copia;
     }
 
