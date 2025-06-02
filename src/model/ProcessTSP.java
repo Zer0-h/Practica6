@@ -132,7 +132,6 @@ public class ProcessTSP extends Thread {
         executor.shutdown();
 
         // Guardam els resultats
-
         model.setMillorRuta(millorCami);
         model.setCostRuta(millorCost[0]);
         model.setNodesExplorats(nodesExplorats[0]);
