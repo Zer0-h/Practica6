@@ -13,6 +13,7 @@ import java.util.concurrent.*;
  * aprofitant múltiples nuclis de CPU mitjançant un `ExecutorService`.
  *
  * Un cop trobada la millor ruta, s'actualitza el model i es notifica la vista.
+ * També s’emmagatzemen la cota mínima i màxima trobades durant l’execució.
  *
  * @author tonitorres
  */
@@ -24,20 +25,10 @@ public class ProcessTSP extends Thread {
     /** Valor utilitzat per representar connexions inexistents. */
     private static final int INFINIT = Integer.MAX_VALUE / 2;
 
-    /**
-     * Constructor que rep el controlador per accedir al model i emetre
-     * notificacions.
-     *
-     * @param controlador controlador principal
-     */
     public ProcessTSP(Controlador controlador) {
         this.controlador = controlador;
     }
 
-    /**
-     * Punt d’entrada del fil. Obté la matriu de distàncies,
-     * executa la resolució i actualitza el model amb els resultats.
-     */
     @Override
     public void run() {
         Model model = controlador.getModel();
@@ -48,31 +39,21 @@ public class ProcessTSP extends Thread {
             return;
         }
 
-        ResultatTSP resultat = resoldreTSP(matriu);
-
-        model.setMillorRuta(resultat.getRuta());
-        model.setCostRuta(resultat.getCost());
-        model.setNodesExplorats(resultat.getNodesExplorats());
-        model.setNodesPresents(resultat.getNodesPresents());
+        resoldreTSP(matriu, model);
 
         controlador.notificar(Notificacio.PINTAR_RESULTAT);
     }
 
-    /**
-     * Resol el TSP aplicant Branch and Bound amb matrius reduïdes i execució
-     * paral·lela.
-     *
-     * @param matriuOriginal matriu de distàncies original
-     *
-     * @return resultat amb ruta, cost i estadístiques
-     */
-    private ResultatTSP resoldreTSP(int[][] matriuOriginal) {
+    private void resoldreTSP(int[][] matriuOriginal, Model model) {
         int n = matriuOriginal.length;
 
         final int[] millorCost = {INFINIT};
         List<Integer> millorCami = Collections.synchronizedList(new ArrayList<>());
         int[] nodesExplorats = {0};
         int nodesPresents = 0;
+
+        final int[] cotaMinima = {Integer.MAX_VALUE};
+        final int[] cotaMaxima = {Integer.MIN_VALUE};
 
         PriorityQueue<NodeTSP> cua = new PriorityQueue<>();
         List<Integer> camiInicial = new ArrayList<>();
@@ -87,7 +68,6 @@ public class ProcessTSP extends Thread {
                 Math.max(2, Runtime.getRuntime().availableProcessors())
         );
 
-        // Bucle principal: extreure nodes i generar fills en paral·lel
         while (!cua.isEmpty()) {
             NodeTSP node = cua.poll();
             nodesPresents++;
@@ -99,7 +79,7 @@ public class ProcessTSP extends Thread {
                         millorCost[0] = costFinal;
                         millorCami.clear();
                         millorCami.addAll(node.getCami());
-                        millorCami.add(0); // tornar a l’origen
+                        millorCami.add(0);
                     }
                 }
                 continue;
@@ -123,6 +103,10 @@ public class ProcessTSP extends Thread {
                         int novaCota = nouCost + reduccio;
 
                         synchronized (millorCost) {
+                            // Actualitzam cotes trobades
+                            cotaMinima[0] = Math.min(cotaMinima[0], novaCota);
+                            cotaMaxima[0] = Math.max(cotaMaxima[0], novaCota);
+
                             if (novaCota < millorCost[0]) {
                                 nodesExplorats[0]++;
                                 return new NodeTSP(nouCami, novaMatriu, nouCost, novaCota, ciutatFinal);
@@ -147,17 +131,16 @@ public class ProcessTSP extends Thread {
 
         executor.shutdown();
 
-        return new ResultatTSP(millorCami, millorCost[0], nodesExplorats[0], nodesPresents);
+        // Guardam els resultats
+
+        model.setMillorRuta(millorCami);
+        model.setCostRuta(millorCost[0]);
+        model.setNodesExplorats(nodesExplorats[0]);
+        model.setNodesPresents(nodesPresents);
+        model.setCotaMinima(cotaMinima[0]);
+        model.setCotaMaxima(cotaMaxima[0]);
     }
 
-    /**
-     * Bloqueja una fila i una columna de la matriu, evitant que es repeteixi
-     * una ciutat.
-     *
-     * @param matriu  matriu a modificar
-     * @param fila    fila a bloquejar (ciutat d’origen)
-     * @param columna columna a bloquejar (ciutat de destí)
-     */
     private void bloquejar(int[][] matriu, int fila, int columna) {
         Arrays.fill(matriu[fila], INFINIT);
         for (int i = 0; i < matriu.length; i++) {
@@ -165,9 +148,6 @@ public class ProcessTSP extends Thread {
         }
     }
 
-    /**
-     * Fa una còpia profunda d’una matriu d’enters.
-     */
     private int[][] copiarMatriu(int[][] original) {
         int n = original.length;
         int[][] copia = new int[n][n];
@@ -179,14 +159,6 @@ public class ProcessTSP extends Thread {
         return copia;
     }
 
-    /**
-     * Aplica reducció per files i columnes a la matriu (pas de minimització).
-     *
-     * @param matriu matriu a reduir
-     * @param n      dimensió de la matriu
-     *
-     * @return matriu amb valors reduïts
-     */
     private int[][] reduirMatriu(int[][] matriu, int n) {
         for (int i = 0; i < n; i++) {
             int min = Arrays.stream(matriu[i]).min().orElse(INFINIT);
@@ -214,14 +186,6 @@ public class ProcessTSP extends Thread {
         return matriu;
     }
 
-    /**
-     * Calcula la suma mínima de files i columnes per obtenir la reducció.
-     *
-     * @param matriu matriu reduïda
-     * @param n      mida del problema
-     *
-     * @return valor total de la reducció aplicada
-     */
     private int calcularReduccio(int[][] matriu, int n) {
         int suma = 0;
         for (int i = 0; i < n; i++) {
