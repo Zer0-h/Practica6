@@ -27,19 +27,15 @@ public class ProcessTSP extends Thread {
     private static final int INFINIT = Integer.MAX_VALUE / 2;
 
     /**
-     * Constructor que rep el controlador per accedir al model i emetre
-     * notificacions.
+     * Constructor que rep el controlador principal del sistema.
      *
-     * @param controlador controlador principal
+     * @param controlador controlador principal (MVC)
      */
     public ProcessTSP(Controlador controlador) {
         this.controlador = controlador;
     }
 
-    /**
-     * Punt d’entrada del fil. Obté la matriu de distàncies,
-     * executa la resolució i actualitza el model amb els resultats.
-     */
+    /** Punt d’entrada del fil: resol el TSP i actualitza el model i la vista. */
     @Override
     public void run() {
         Model model = controlador.getModel();
@@ -55,17 +51,18 @@ public class ProcessTSP extends Thread {
     }
 
     /**
-     * Resol el TSP aplicant Branch and Bound amb matrius reduïdes i execució
-     * paral·lela.
+     * Resol el TSP aplicant Branch and Bound amb matrius reduïdes
+     * i generació de fills en paral·lel.
      *
-     * @param matriuOriginal matriu de distàncies original
-     * @param model          referència al model per actualitzar els resultats
+     * @param matriuOriginal matriu de distàncies del graf original
+     * @param model          referència al model per guardar els resultats
      */
     private void resoldreTSP(int[][] matriuOriginal, Model model) {
         int n = matriuOriginal.length;
 
+        // Variables compartides per guardar l’estat global
         AtomicInteger millorCost = new AtomicInteger(INFINIT);
-        AtomicReference<List<Integer>> millorCami = new AtomicReference<>(new ArrayList<>());
+        List<Integer> millorCami = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger nodesExplorats = new AtomicInteger(0);
         AtomicInteger nodesDescartats = new AtomicInteger(0);
         AtomicInteger cotaMinima = new AtomicInteger(Integer.MAX_VALUE);
@@ -81,10 +78,10 @@ public class ProcessTSP extends Thread {
         cua.add(new NodeTSP(camiInicial, matReducida, 0, cotaInicial, 0));
 
         ExecutorService executor = Executors.newFixedThreadPool(
-                Math.max(2, Runtime.getRuntime().availableProcessors())
+            Math.max(2, Runtime.getRuntime().availableProcessors())
         );
 
-        // Bucle principal: extreure nodes i generar fills en paral·lel
+        // Bucle principal: extreu nodes i genera fills en paral·lel
         while (!cua.isEmpty()) {
             NodeTSP node = cua.poll();
 
@@ -92,9 +89,9 @@ public class ProcessTSP extends Thread {
                 int costFinal = node.getCost() + matriuOriginal[node.getCiutatActual()][0];
                 if (costFinal < millorCost.get()) {
                     millorCost.set(costFinal);
-                    List<Integer> ruta = new ArrayList<>(node.getCami());
-                    ruta.add(0);
-                    millorCami.set(ruta);
+                    millorCami.clear();
+                    millorCami.addAll(node.getCami());
+                    millorCami.add(0); // tornada a l’origen
                 }
                 continue;
             }
@@ -105,6 +102,9 @@ public class ProcessTSP extends Thread {
                 if (!node.getCami().contains(ciutat)) {
                     final int ciutatFinal = ciutat;
                     futurs.add(executor.submit(() -> {
+                        int dist = node.getMatriuReduida()[node.getCiutatActual()][ciutatFinal];
+                        if (dist >= INFINIT) return null;
+
                         List<Integer> nouCami = new ArrayList<>(node.getCami());
                         nouCami.add(ciutatFinal);
 
@@ -113,11 +113,11 @@ public class ProcessTSP extends Thread {
                         novaMatriu[ciutatFinal][0] = INFINIT;
 
                         int reduccio = calcularReduccio(novaMatriu, n);
-                        int nouCost = node.getCost() + node.getMatriuReduida()[node.getCiutatActual()][ciutatFinal];
+                        int nouCost = node.getCost() + dist;
                         int novaCota = nouCost + reduccio;
 
-                        cotaMinima.updateAndGet(min -> Math.min(min, novaCota));
-                        cotaMaxima.updateAndGet(max -> Math.max(max, novaCota));
+                        cotaMinima.getAndUpdate(min -> Math.min(min, novaCota));
+                        cotaMaxima.getAndUpdate(max -> Math.max(max, novaCota));
 
                         if (novaCota < millorCost.get()) {
                             nodesExplorats.incrementAndGet();
@@ -144,8 +144,8 @@ public class ProcessTSP extends Thread {
 
         executor.shutdown();
 
-        // Guardam els resultats dins el model
-        model.setMillorRuta(millorCami.get());
+        // Actualitza el model amb els resultats finals
+        model.setMillorRuta(millorCami);
         model.setCostRuta(millorCost.get());
         model.setNodesExplorats(nodesExplorats.get());
         model.setNodesDescartats(nodesDescartats.get());
@@ -154,12 +154,7 @@ public class ProcessTSP extends Thread {
     }
 
     /**
-     * Bloqueja una fila i una columna de la matriu, evitant que es repeteixi
-     * una ciutat.
-     *
-     * @param matriu  matriu a modificar
-     * @param fila    fila a bloquejar (ciutat d’origen)
-     * @param columna columna a bloquejar (ciutat de destí)
+     * Bloqueja una fila i una columna de la matriu per evitar tornar enrere.
      */
     private void bloquejar(int[][] matriu, int fila, int columna) {
         Arrays.fill(matriu[fila], INFINIT);
@@ -181,12 +176,7 @@ public class ProcessTSP extends Thread {
     }
 
     /**
-     * Aplica reducció per files i columnes a la matriu (pas de minimització).
-     *
-     * @param matriu matriu a reduir
-     * @param n      dimensió de la matriu
-     *
-     * @return matriu amb valors reduïts
+     * Aplica una reducció per files i columnes i retorna la matriu modificada.
      */
     private int[][] reduirMatriu(int[][] matriu, int n) {
         for (int i = 0; i < n; i++) {
@@ -216,25 +206,24 @@ public class ProcessTSP extends Thread {
     }
 
     /**
-     * Calcula la suma mínima de files i columnes per obtenir la reducció.
-     *
-     * @param matriu matriu reduïda
-     * @param n      mida del problema
-     *
-     * @return valor total de la reducció aplicada
+     * Calcula el cost total de la reducció aplicada a la matriu.
      */
     private int calcularReduccio(int[][] matriu, int n) {
         int suma = 0;
         for (int i = 0; i < n; i++) {
-            int minFila = Arrays.stream(matriu[i]).min().orElse(INFINIT);
-            if (minFila != INFINIT && minFila > 0) suma += minFila;
+            int min = Arrays.stream(matriu[i]).min().orElse(INFINIT);
+            if (min != INFINIT && min > 0) {
+                suma += min;
+            }
         }
         for (int j = 0; j < n; j++) {
-            int minCol = INFINIT;
+            int min = INFINIT;
             for (int i = 0; i < n; i++) {
-                minCol = Math.min(minCol, matriu[i][j]);
+                min = Math.min(min, matriu[i][j]);
             }
-            if (minCol != INFINIT && minCol > 0) suma += minCol;
+            if (min != INFINIT && min > 0) {
+                suma += min;
+            }
         }
         return suma;
     }

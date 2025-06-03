@@ -31,7 +31,7 @@ public class PanellBotons extends JPanel {
 
         // Spinner per seleccionar el nombre de ciutats
         add(new JLabel("Nombre de ciutats:"));
-        JSpinner spinnerCiutats = new JSpinner(new SpinnerNumberModel(6, 3, 20, 1));
+        JSpinner spinnerCiutats = new JSpinner(new SpinnerNumberModel(6, 3, 26, 1));
         add(spinnerCiutats);
 
         // Spinner per definir el cost màxim entre ciutats

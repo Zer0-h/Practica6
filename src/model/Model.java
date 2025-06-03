@@ -39,12 +39,14 @@ public class Model {
     /** Nombre de nodes realment explorats (fills generats). */
     private int nodesExplorats;
 
-    /** Nombre de nodes presents a la cua de prioritats durant l’execució. */
-    private int nodesPresents;
+    /** Nombre de nodes descartats durant l’execució. */
+    private int nodesDescartats;
 
-    /** Nombre total de nodes gestionats (si es vol controlar més
-     * detalladament). */
-    private int nodesPresentsTotals;
+    /** Cota mínima trobada durant l'execució de Branch and Bound. */
+    private int cotaMinima;
+
+    /** Cota màxima trobada durant l'execució de Branch and Bound. */
+    private int cotaMaxima;
 
     // --- Getters i Setters de configuració ---
     public int getNumCiutats() {
@@ -105,20 +107,28 @@ public class Model {
         this.nodesExplorats = nodes;
     }
 
-    public int getNodesPresents() {
-        return nodesPresents;
+    public int getNodesDescartats() {
+        return nodesDescartats;
     }
 
-    public void setNodesPresents(int nodes) {
-        this.nodesPresents = nodes;
+    public void setNodesDescartats(int nodes) {
+        this.nodesDescartats = nodes;
     }
 
-    public int getNodesPresentsTotals() {
-        return nodesPresentsTotals;
+    public int getCotaMinima() {
+        return cotaMinima;
     }
 
-    public void setNodesPresentsTotals(int nodes) {
-        this.nodesPresentsTotals = nodes;
+    public void setCotaMinima(int cotaMinima) {
+        this.cotaMinima = cotaMinima;
+    }
+
+    public int getCotaMaxima() {
+        return cotaMaxima;
+    }
+
+    public void setCotaMaxima(int cotaMaxima) {
+        this.cotaMaxima = cotaMaxima;
     }
 
     /**
@@ -129,7 +139,8 @@ public class Model {
         millorRuta = null;
         costRuta = -1;
         nodesExplorats = 0;
-        nodesPresents = 0;
-        nodesPresentsTotals = 0;
+        nodesDescartats = 0;
+        cotaMinima = -1;
+        cotaMaxima = -1;
     }
 }

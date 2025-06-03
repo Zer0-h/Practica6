@@ -11,8 +11,8 @@ import model.Model;
  * Vista principal de l’aplicació TSP resolt amb Branch and Bound.
  *
  * Aquesta classe conté la interfície gràfica general, composta pels panells:
- * - Panell de configuració i accions (PanellBotonsTSP)
- * - Panell de visualització del graf (PanellGrafTSP)
+ * - Panell de configuració i accions (PanellBotons)
+ * - Panell de visualització del graf (PanellGraf)
  * - Panell d’estadístiques (PanellEstadistiques)
  *
  * Gestiona les actualitzacions visuals en resposta a les notificacions
@@ -80,10 +80,12 @@ public class Vista extends JFrame implements Notificar {
         Model model = controlador.getModel();
         panellGraf.mostrarCami(model.getMillorRuta());
         panellEstadistiques.actualitzarEstadistiques(
-                model.getCostRuta(),
-                model.getNodesExplorats(),
-                model.getNodesPresents(),
-                model.getMillorRuta()
+            model.getCostRuta(),
+            model.getNodesExplorats(),
+            model.getNodesDescartats(),
+            model.getCotaMinima(),
+            model.getCotaMaxima(),
+            model.getMillorRuta()
         );
     }
 
@@ -105,10 +107,8 @@ public class Vista extends JFrame implements Notificar {
     @Override
     public void notificar(Notificacio notificacio) {
         switch (notificacio) {
-            case PINTAR_GRAF ->
-                pintarGraf();
-            case PINTAR_RESULTAT ->
-                pintarResultat();
+            case PINTAR_GRAF -> pintarGraf();
+            case PINTAR_RESULTAT -> pintarResultat();
         }
     }
 }

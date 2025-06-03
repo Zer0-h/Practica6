@@ -8,9 +8,9 @@ import javax.swing.*;
  * Panell central de la GUI que representa visualment el graf de ciutats
  * i la ruta òptima trobada amb Branch and Bound per al problema del TSP.
  *
- * Els nodes es dibuixen en disposició circular i les arestes poden mostrar
- * els costos si l'opció està activada. També es destaca la ruta òptima en
- * vermell.
+ * Els nodes es dibuixen en disposició circular, i les arestes dirigides
+ * es representen amb fletxes. També poden mostrar els costos si s'activa
+ * l'opció corresponent. La ruta òptima es destaca en vermell.
  *
  * Forma part de la vista del patró MVC.
  *
@@ -57,14 +57,14 @@ public class PanellGraf extends JPanel {
     }
 
     /**
-     * Dibuixa tot el graf i la ruta òptima, si està disponible.
+     * Mètode principal de dibuix: graf, costos i ruta òptima.
+     *
+     * @param g context gràfic de Swing
      */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (matriu == null) {
-            return;
-        }
+        if (matriu == null) return;
 
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -85,7 +85,7 @@ public class PanellGraf extends JPanel {
 
         Font fontOriginal = g2.getFont();
 
-        // -- Dibuix de totes les arestes --
+        // -- Dibuix de totes les arestes amb fletxes --
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 if (i != j && matriu[i][j] < Integer.MAX_VALUE / 2) {
@@ -94,7 +94,7 @@ public class PanellGraf extends JPanel {
 
                     g2.setColor(new Color(200, 200, 200));
                     g2.setStroke(new BasicStroke(1.0f));
-                    g2.drawLine(p1.x, p1.y, p2.x, p2.y);
+                    dibuixarFletxa(g2, p1, p2);
 
                     // -- Cost opcional de l’arc --
                     if (mostrarCostos) {
@@ -125,7 +125,7 @@ public class PanellGraf extends JPanel {
             for (int i = 0; i < camiOptim.size() - 1; i++) {
                 int from = camiOptim.get(i);
                 int to = camiOptim.get(i + 1);
-                g2.drawLine(posicions[from].x, posicions[from].y, posicions[to].x, posicions[to].y);
+                dibuixarFletxa(g2, posicions[from], posicions[to]);
             }
         }
 
@@ -145,6 +145,41 @@ public class PanellGraf extends JPanel {
             int textHeight = fm.getAscent();
             g2.drawString(nom, p.x - textWidth / 2, p.y + textHeight / 2 - 2);
         }
+    }
+
+    /**
+     * Dibuixa una línia amb una punta de fletxa entre dos punts (direcció p1 → p2),
+     * retallant-la perquè la punta no quedi amagada dins del node.
+     *
+     * @param g2 context gràfic
+     * @param p1 punt inicial
+     * @param p2 punt final (direcció de la fletxa)
+     */
+    private void dibuixarFletxa(Graphics2D g2, Point p1, Point p2) {
+        double angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+        int longitud = 20; // radi del node (aprox.)
+
+        // Coordenades del punt d'inici i final de la línia (retallada)
+        int xStart = (int) (p1.x + longitud * Math.cos(angle));
+        int yStart = (int) (p1.y + longitud * Math.sin(angle));
+        int xEnd = (int) (p2.x - longitud * Math.cos(angle));
+        int yEnd = (int) (p2.y - longitud * Math.sin(angle));
+
+        g2.drawLine(xStart, yStart, xEnd, yEnd);
+
+        // Dibuixa la punta de la fletxa
+        int midaFletxa = 10;
+        int x1 = (int) (xEnd - midaFletxa * Math.cos(angle - Math.PI / 6));
+        int y1 = (int) (yEnd - midaFletxa * Math.sin(angle - Math.PI / 6));
+        int x2 = (int) (xEnd - midaFletxa * Math.cos(angle + Math.PI / 6));
+        int y2 = (int) (yEnd - midaFletxa * Math.sin(angle + Math.PI / 6));
+
+        Polygon punta = new Polygon();
+        punta.addPoint(xEnd, yEnd);
+        punta.addPoint(x1, y1);
+        punta.addPoint(x2, y2);
+
+        g2.fillPolygon(punta);
     }
 
     /**
