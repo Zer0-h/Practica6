@@ -4,6 +4,7 @@ import controlador.Controlador;
 import controlador.Notificacio;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 /**
  * Fil d'execució que resol el problema del viatjant de comerç (TSP)
@@ -13,8 +14,7 @@ import java.util.concurrent.*;
  * aprofitant múltiples nuclis de CPU mitjançant un `ExecutorService`.
  *
  * Un cop trobada la millor ruta, s'actualitza el model i es notifica la vista.
- * També s’emmagatzemen la cota mínima i màxima trobades durant l’execució,
- * i es compten els nodes explorats i descartats per poda.
+ * També s’emmagatzemen la cota mínima i màxima trobades durant l’execució.
  *
  * @author tonitorres
  */
@@ -26,10 +26,20 @@ public class ProcessTSP extends Thread {
     /** Valor utilitzat per representar connexions inexistents. */
     private static final int INFINIT = Integer.MAX_VALUE / 2;
 
+    /**
+     * Constructor que rep el controlador per accedir al model i emetre
+     * notificacions.
+     *
+     * @param controlador controlador principal
+     */
     public ProcessTSP(Controlador controlador) {
         this.controlador = controlador;
     }
 
+    /**
+     * Punt d’entrada del fil. Obté la matriu de distàncies,
+     * executa la resolució i actualitza el model amb els resultats.
+     */
     @Override
     public void run() {
         Model model = controlador.getModel();
@@ -41,20 +51,25 @@ public class ProcessTSP extends Thread {
         }
 
         resoldreTSP(matriu, model);
-
         controlador.notificar(Notificacio.PINTAR_RESULTAT);
     }
 
+    /**
+     * Resol el TSP aplicant Branch and Bound amb matrius reduïdes i execució
+     * paral·lela.
+     *
+     * @param matriuOriginal matriu de distàncies original
+     * @param model          referència al model per actualitzar els resultats
+     */
     private void resoldreTSP(int[][] matriuOriginal, Model model) {
         int n = matriuOriginal.length;
 
-        final int[] millorCost = {INFINIT};
-        List<Integer> millorCami = Collections.synchronizedList(new ArrayList<>());
-        int[] nodesExplorats = {0};       // Fills acceptats (no descartats per poda)
-        int[] nodesDescartats = {0};      // Fills descartats per cota
-
-        int[] cotaMinima = {Integer.MAX_VALUE};
-        int[] cotaMaxima = {Integer.MIN_VALUE};
+        AtomicInteger millorCost = new AtomicInteger(INFINIT);
+        AtomicReference<List<Integer>> millorCami = new AtomicReference<>(new ArrayList<>());
+        AtomicInteger nodesExplorats = new AtomicInteger(0);
+        AtomicInteger nodesDescartats = new AtomicInteger(0);
+        AtomicInteger cotaMinima = new AtomicInteger(Integer.MAX_VALUE);
+        AtomicInteger cotaMaxima = new AtomicInteger(Integer.MIN_VALUE);
 
         PriorityQueue<NodeTSP> cua = new PriorityQueue<>();
         List<Integer> camiInicial = new ArrayList<>();
@@ -69,18 +84,17 @@ public class ProcessTSP extends Thread {
                 Math.max(2, Runtime.getRuntime().availableProcessors())
         );
 
+        // Bucle principal: extreure nodes i generar fills en paral·lel
         while (!cua.isEmpty()) {
             NodeTSP node = cua.poll();
 
             if (node.getCami().size() == n) {
                 int costFinal = node.getCost() + matriuOriginal[node.getCiutatActual()][0];
-                synchronized (millorCost) {
-                    if (costFinal < millorCost[0]) {
-                        millorCost[0] = costFinal;
-                        millorCami.clear();
-                        millorCami.addAll(node.getCami());
-                        millorCami.add(0); // retorn a l'origen
-                    }
+                if (costFinal < millorCost.get()) {
+                    millorCost.set(costFinal);
+                    List<Integer> ruta = new ArrayList<>(node.getCami());
+                    ruta.add(0);
+                    millorCami.set(ruta);
                 }
                 continue;
             }
@@ -99,27 +113,19 @@ public class ProcessTSP extends Thread {
                         novaMatriu[ciutatFinal][0] = INFINIT;
 
                         int reduccio = calcularReduccio(novaMatriu, n);
-                        int distancia = node.getMatriuReduida()[node.getCiutatActual()][ciutatFinal];
-                        if (distancia >= INFINIT) {
-                            return null; // no hi ha connexió, no és un fill vàlid
-                        }
-
-                        int nouCost = node.getCost() + distancia;
+                        int nouCost = node.getCost() + node.getMatriuReduida()[node.getCiutatActual()][ciutatFinal];
                         int novaCota = nouCost + reduccio;
 
-                        synchronized (millorCost) {
-                            // Actualització de cotes mínimes i màximes
-                            cotaMinima[0] = Math.min(cotaMinima[0], novaCota);
-                            cotaMaxima[0] = Math.max(cotaMaxima[0], novaCota);
+                        cotaMinima.updateAndGet(min -> Math.min(min, novaCota));
+                        cotaMaxima.updateAndGet(max -> Math.max(max, novaCota));
 
-                            if (novaCota < millorCost[0]) {
-                                nodesExplorats[0]++;
-                                return new NodeTSP(nouCami, novaMatriu, nouCost, novaCota, ciutatFinal);
-                            } else {
-                                nodesDescartats[0]++;
-                            }
+                        if (novaCota < millorCost.get()) {
+                            nodesExplorats.incrementAndGet();
+                            return new NodeTSP(nouCami, novaMatriu, nouCost, novaCota, ciutatFinal);
+                        } else {
+                            nodesDescartats.incrementAndGet();
+                            return null;
                         }
-                        return null;
                     }));
                 }
             }
@@ -138,18 +144,22 @@ public class ProcessTSP extends Thread {
 
         executor.shutdown();
 
-        // Guardam els resultats al model
-        model.setMillorRuta(millorCami);
-        model.setCostRuta(millorCost[0]);
-        model.setNodesExplorats(nodesExplorats[0]);
-        model.setNodesDescartats(nodesDescartats[0]);
-        model.setCotaMinima(cotaMinima[0]);
-        model.setCotaMaxima(cotaMaxima[0]);
+        // Guardam els resultats dins el model
+        model.setMillorRuta(millorCami.get());
+        model.setCostRuta(millorCost.get());
+        model.setNodesExplorats(nodesExplorats.get());
+        model.setNodesDescartats(nodesDescartats.get());
+        model.setCotaMinima(cotaMinima.get());
+        model.setCotaMaxima(cotaMaxima.get());
     }
 
     /**
-     * Bloqueja la fila i columna corresponents al moviment recent, evitant
-     * repetir ciutats.
+     * Bloqueja una fila i una columna de la matriu, evitant que es repeteixi
+     * una ciutat.
+     *
+     * @param matriu  matriu a modificar
+     * @param fila    fila a bloquejar (ciutat d’origen)
+     * @param columna columna a bloquejar (ciutat de destí)
      */
     private void bloquejar(int[][] matriu, int fila, int columna) {
         Arrays.fill(matriu[fila], INFINIT);
@@ -159,58 +169,72 @@ public class ProcessTSP extends Thread {
     }
 
     /**
-     * Retorna una còpia profunda de la matriu original.
+     * Fa una còpia profunda d’una matriu d’enters.
      */
     private int[][] copiarMatriu(int[][] original) {
         int n = original.length;
         int[][] copia = new int[n][n];
-        for (int i = 0; i < n; i++)
-            for (int j = 0; j < n; j++)
-                copia[i][j] = original[i][j];
+        for (int i = 0; i < n; i++) {
+            System.arraycopy(original[i], 0, copia[i], 0, n);
+        }
         return copia;
     }
 
     /**
-     * Aplica la reducció de files i columnes a una matriu, retornant-la modificada.
+     * Aplica reducció per files i columnes a la matriu (pas de minimització).
+     *
+     * @param matriu matriu a reduir
+     * @param n      dimensió de la matriu
+     *
+     * @return matriu amb valors reduïts
      */
     private int[][] reduirMatriu(int[][] matriu, int n) {
         for (int i = 0; i < n; i++) {
             int min = Arrays.stream(matriu[i]).min().orElse(INFINIT);
             if (min != INFINIT && min > 0) {
-                for (int j = 0; j < n; j++)
-                    if (matriu[i][j] != INFINIT)
+                for (int j = 0; j < n; j++) {
+                    if (matriu[i][j] != INFINIT) {
                         matriu[i][j] -= min;
+                    }
+                }
             }
         }
         for (int j = 0; j < n; j++) {
             int min = INFINIT;
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < n; i++) {
                 min = Math.min(min, matriu[i][j]);
+            }
             if (min != INFINIT && min > 0) {
-                for (int i = 0; i < n; i++)
-                    if (matriu[i][j] != INFINIT)
+                for (int i = 0; i < n; i++) {
+                    if (matriu[i][j] != INFINIT) {
                         matriu[i][j] -= min;
+                    }
+                }
             }
         }
         return matriu;
     }
 
     /**
-     * Calcula la suma de mínims de files i columnes, usada com a cota inferior.
+     * Calcula la suma mínima de files i columnes per obtenir la reducció.
+     *
+     * @param matriu matriu reduïda
+     * @param n      mida del problema
+     *
+     * @return valor total de la reducció aplicada
      */
     private int calcularReduccio(int[][] matriu, int n) {
         int suma = 0;
         for (int i = 0; i < n; i++) {
-            int min = Arrays.stream(matriu[i]).min().orElse(INFINIT);
-            if (min != INFINIT && min > 0)
-                suma += min;
+            int minFila = Arrays.stream(matriu[i]).min().orElse(INFINIT);
+            if (minFila != INFINIT && minFila > 0) suma += minFila;
         }
         for (int j = 0; j < n; j++) {
-            int min = INFINIT;
-            for (int i = 0; i < n; i++)
-                min = Math.min(min, matriu[i][j]);
-            if (min != INFINIT && min > 0)
-                suma += min;
+            int minCol = INFINIT;
+            for (int i = 0; i < n; i++) {
+                minCol = Math.min(minCol, matriu[i][j]);
+            }
+            if (minCol != INFINIT && minCol > 0) suma += minCol;
         }
         return suma;
     }
