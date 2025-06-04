@@ -48,6 +48,8 @@ public class Model {
     /** Cota màxima trobada durant l'execució de Branch and Bound. */
     private int cotaMaxima;
 
+    private int ciutatInicial;
+
     // --- Getters i Setters de configuració ---
     public int getNumCiutats() {
         return numCiutats;
@@ -129,6 +131,14 @@ public class Model {
 
     public void setCotaMaxima(int cotaMaxima) {
         this.cotaMaxima = cotaMaxima;
+    }
+
+    public int getCiutatInicial() {
+        return ciutatInicial;
+    }
+
+    public void setCiutatInicial(int ciutatInicial) {
+        this.ciutatInicial = ciutatInicial;
     }
 
     /**
