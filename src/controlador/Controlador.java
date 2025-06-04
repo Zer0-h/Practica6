@@ -59,7 +59,7 @@ public class Controlador implements Notificar {
      */
     private void resoldreTSP() {
         model.reset();
-        vista.notificar(Notificacio.PINTAR_GRAF); // opcional: redibuixa el graf abans de calcular
+        vista.notificar(Notificacio.PINTAR_GRAF);
         new ProcessTSP(this).start();
     }
 

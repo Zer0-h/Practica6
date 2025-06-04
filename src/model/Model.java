@@ -29,6 +29,9 @@ public class Model {
     /** Matriu d’adjacència dirigida amb els costos entre ciutats. */
     private int[][] matriuDistancies;
 
+    /** Numero de la ciutat per la que comença l'execució de Branch and Bound. */
+    private int ciutatInicial;
+
     // --- Resultats del càlcul del TSP ---
     /** Ruta òptima trobada (ordre dels nodes). */
     private List<Integer> millorRuta;
@@ -47,8 +50,6 @@ public class Model {
 
     /** Cota màxima trobada durant l'execució de Branch and Bound. */
     private int cotaMaxima;
-
-    private int ciutatInicial;
 
     // --- Getters i Setters de configuració ---
     public int getNumCiutats() {

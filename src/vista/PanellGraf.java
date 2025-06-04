@@ -18,18 +18,32 @@ import javax.swing.*;
  */
 public class PanellGraf extends JPanel {
 
+    /** Matriu d’adjacència amb les distàncies entre ciutats. */
     private int[][] matriu;
+
+    /** Ruta òptima trobada pel TSP. */
     private List<Integer> camiOptim;
+
+    /** Indica si s’han de mostrar els valors de cost de les arestes. */
     private boolean mostrarCostos = false;
+
+    /** Radi del cercle on es distribueixen les ciutats. */
     private static final int RADIUS = 200;
 
+    /** Posicions (x, y) dels nodes en la pantalla. */
     private Point[] posicions = new Point[0];
+
+    /** Referència al controlador (per llegir/modificar el model). */
     private final Controlador controlador;
 
+    /**
+     * Constructor que crea el panell i gestiona el clic per seleccionar la ciutat inicial.
+     */
     public PanellGraf(Controlador controlador) {
         this.controlador = controlador;
         setBackground(Color.WHITE);
 
+        // Listener per detectar clics sobre els nodes
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -46,17 +60,26 @@ public class PanellGraf extends JPanel {
         });
     }
 
+    /**
+     * Actualitza el graf amb una nova matriu de distàncies.
+     */
     public void actualitzarGraf(int[][] matriu) {
         this.matriu = matriu;
         this.camiOptim = null;
         repaint();
     }
 
+    /**
+     * Mostra una nova ruta òptima sobre el graf.
+     */
     public void mostrarCami(List<Integer> cami) {
         this.camiOptim = cami;
         repaint();
     }
 
+    /**
+     * Dibuixa el graf: nodes, arestes, costos opcionals i ruta òptima.
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -70,6 +93,7 @@ public class PanellGraf extends JPanel {
         int cx = getWidth() / 2;
         int cy = getHeight() / 2;
 
+        // Calcula posicions dels nodes en cercle
         for (int i = 0; i < n; i++) {
             double angle = 2 * Math.PI * i / n;
             int x = (int) (cx + RADIUS * Math.cos(angle));
@@ -79,6 +103,7 @@ public class PanellGraf extends JPanel {
 
         Font fontOriginal = g2.getFont();
 
+        // Dibuixa totes les arestes i, opcionalment, els seus costos
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 if (i != j && matriu[i][j] < Integer.MAX_VALUE / 2) {
@@ -86,6 +111,7 @@ public class PanellGraf extends JPanel {
                     g2.setStroke(new BasicStroke(1.0f));
                     dibuixarFletxa(g2, posicions[i], posicions[j]);
 
+                    // Mostra el valor del cost si està activat
                     if (mostrarCostos) {
                         int mx = (posicions[i].x + posicions[j].x) / 2;
                         int my = (posicions[i].y + posicions[j].y) / 2;
@@ -106,6 +132,7 @@ public class PanellGraf extends JPanel {
 
         g2.setFont(fontOriginal);
 
+        // Dibuixa la ruta òptima trobada
         if (camiOptim != null && camiOptim.size() > 1) {
             g2.setColor(Color.RED);
             g2.setStroke(new BasicStroke(2.5f));
@@ -116,6 +143,7 @@ public class PanellGraf extends JPanel {
             }
         }
 
+        // Dibuixa els nodes (cercles amb lletra) i destaca el node d’origen
         int ciutatInicial = controlador.getModel().getCiutatInicial();
         for (int i = 0; i < n; i++) {
             Point p = posicions[i];
@@ -133,6 +161,9 @@ public class PanellGraf extends JPanel {
         }
     }
 
+    /**
+     * Dibuixa una fletxa (amb punta) entre dos punts del panell.
+     */
     private void dibuixarFletxa(Graphics2D g2, Point p1, Point p2) {
         double angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
         int longitud = 20;
@@ -143,6 +174,7 @@ public class PanellGraf extends JPanel {
 
         g2.drawLine(xStart, yStart, xEnd, yEnd);
 
+        // Dibuixa la punta de la fletxa
         int midaFletxa = 10;
         int x1 = (int) (xEnd - midaFletxa * Math.cos(angle - Math.PI / 6));
         int y1 = (int) (yEnd - midaFletxa * Math.sin(angle - Math.PI / 6));
@@ -156,6 +188,9 @@ public class PanellGraf extends JPanel {
         g2.fillPolygon(punta);
     }
 
+    /**
+     * Habilita o deshabilita la visualització dels valors de cost a les arestes.
+     */
     public void setMostrarCostos(boolean mostrar) {
         this.mostrarCostos = mostrar;
         repaint();

@@ -97,7 +97,7 @@ public class PanellEstadistiques extends JPanel {
         }
 
         areaRuta.setText(sb.toString());
-        areaRuta.setCaretPosition(0); // Moure scroll al principi
+        areaRuta.setCaretPosition(0);
     }
 
     /**
