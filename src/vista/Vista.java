@@ -51,7 +51,7 @@ public class Vista extends JFrame implements Notificar {
         panellBotons = new PanellBotons(controlador);
         add(panellBotons, BorderLayout.NORTH);
 
-        panellGraf = new PanellGraf();
+        panellGraf = new PanellGraf(controlador);
         add(panellGraf, BorderLayout.CENTER);
 
         panellEstadistiques = new PanellEstadistiques();
