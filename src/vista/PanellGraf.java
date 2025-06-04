@@ -1,7 +1,6 @@
 package vista;
 
 import controlador.Controlador;
-
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -37,7 +36,8 @@ public class PanellGraf extends JPanel {
     private final Controlador controlador;
 
     /**
-     * Constructor que crea el panell i gestiona el clic per seleccionar la ciutat inicial.
+     * Constructor que crea el panell i gestiona el clic per seleccionar la
+     * ciutat inicial.
      */
     public PanellGraf(Controlador controlador) {
         this.controlador = controlador;
@@ -47,7 +47,9 @@ public class PanellGraf extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (matriu == null) return;
+                if (matriu == null) {
+                    return;
+                }
                 for (int i = 0; i < posicions.length; i++) {
                     Point p = posicions[i];
                     if (p.distance(e.getPoint()) <= 20) {
@@ -83,7 +85,9 @@ public class PanellGraf extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (matriu == null) return;
+        if (matriu == null) {
+            return;
+        }
 
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -189,7 +193,8 @@ public class PanellGraf extends JPanel {
     }
 
     /**
-     * Habilita o deshabilita la visualització dels valors de cost a les arestes.
+     * Habilita o deshabilita la visualització dels valors de cost a les
+     * arestes.
      */
     public void setMostrarCostos(boolean mostrar) {
         this.mostrarCostos = mostrar;

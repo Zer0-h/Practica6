@@ -100,7 +100,9 @@ public class ProcessTSP extends Thread {
                     final int ciutatFinal = ciutat;
                     futurs.add(executor.submit(() -> {
                         int dist = node.getMatriuReduida()[node.getCiutatActual()][ciutatFinal];
-                        if (dist >= INFINIT) return null;
+                        if (dist >= INFINIT) {
+                            return null;
+                        }
 
                         List<Integer> nouCami = new ArrayList<>(node.getCami());
                         nouCami.add(ciutatFinal);
@@ -174,7 +176,7 @@ public class ProcessTSP extends Thread {
             matriu[i][columna] = INFINIT;
         }
     }
-    
+
     /**
      * Fa una còpia profunda d’una matriu d’enters.
      */
@@ -193,6 +195,7 @@ public class ProcessTSP extends Thread {
      *
      * @param matriu matriu a reduir
      * @param n      dimensió de la matriu
+     *
      * @return suma total de la reducció aplicada
      */
     private int reduirMatriu(int[][] matriu, int n) {
