@@ -78,7 +78,7 @@ public class ProcessTSP extends Thread {
         cua.add(new NodeTSP(camiInicial, matReducida, 0, cotaInicial, 0));
 
         ExecutorService executor = Executors.newFixedThreadPool(
-            Math.max(2, Runtime.getRuntime().availableProcessors())
+                Math.max(2, Runtime.getRuntime().availableProcessors())
         );
 
         // Bucle principal: extreu nodes i genera fills en paral·lel
@@ -103,7 +103,9 @@ public class ProcessTSP extends Thread {
                     final int ciutatFinal = ciutat;
                     futurs.add(executor.submit(() -> {
                         int dist = node.getMatriuReduida()[node.getCiutatActual()][ciutatFinal];
-                        if (dist >= INFINIT) return null;
+                        if (dist >= INFINIT) {
+                            return null;
+                        }
 
                         List<Integer> nouCami = new ArrayList<>(node.getCami());
                         nouCami.add(ciutatFinal);

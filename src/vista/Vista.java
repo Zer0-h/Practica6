@@ -80,12 +80,12 @@ public class Vista extends JFrame implements Notificar {
         Model model = controlador.getModel();
         panellGraf.mostrarCami(model.getMillorRuta());
         panellEstadistiques.actualitzarEstadistiques(
-            model.getCostRuta(),
-            model.getNodesExplorats(),
-            model.getNodesDescartats(),
-            model.getCotaMinima(),
-            model.getCotaMaxima(),
-            model.getMillorRuta()
+                model.getCostRuta(),
+                model.getNodesExplorats(),
+                model.getNodesDescartats(),
+                model.getCotaMinima(),
+                model.getCotaMaxima(),
+                model.getMillorRuta()
         );
     }
 
@@ -107,8 +107,10 @@ public class Vista extends JFrame implements Notificar {
     @Override
     public void notificar(Notificacio notificacio) {
         switch (notificacio) {
-            case PINTAR_GRAF -> pintarGraf();
-            case PINTAR_RESULTAT -> pintarResultat();
+            case PINTAR_GRAF ->
+                pintarGraf();
+            case PINTAR_RESULTAT ->
+                pintarResultat();
         }
     }
 }

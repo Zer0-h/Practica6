@@ -111,7 +111,7 @@ public class PanellEstadistiques extends JPanel {
      * @param ruta       ruta òptima trobada
      */
     public void actualitzarEstadistiques(int cost, int explorats, int descartats,
-                                          int cotaMin, int cotaMax, List<Integer> ruta) {
+            int cotaMin, int cotaMax, List<Integer> ruta) {
         labelCost.setText("Cost total: " + (cost >= 0 ? cost : "-"));
         labelExplorats.setText("Nodes explorats: " + (explorats >= 0 ? explorats : "-"));
         labelDescartats.setText("Nodes descartats: " + (descartats >= 0 ? descartats : "-"));

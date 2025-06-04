@@ -64,7 +64,9 @@ public class PanellGraf extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (matriu == null) return;
+        if (matriu == null) {
+            return;
+        }
 
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -148,7 +150,8 @@ public class PanellGraf extends JPanel {
     }
 
     /**
-     * Dibuixa una línia amb una punta de fletxa entre dos punts (direcció p1 → p2),
+     * Dibuixa una línia amb una punta de fletxa entre dos punts (direcció p1 →
+     * p2),
      * retallant-la perquè la punta no quedi amagada dins del node.
      *
      * @param g2 context gràfic
