@@ -76,6 +76,15 @@ public class Model {
         this.densitat = densitat;
     }
 
+
+    public int getCiutatInicial() {
+        return ciutatInicial;
+    }
+
+    public void setCiutatInicial(int ciutatInicial) {
+        this.ciutatInicial = ciutatInicial;
+    }
+
     // --- Getters i Setters de la matriu ---
     public int[][] getMatriuDistancies() {
         return matriuDistancies;
@@ -132,14 +141,6 @@ public class Model {
 
     public void setCotaMaxima(int cotaMaxima) {
         this.cotaMaxima = cotaMaxima;
-    }
-
-    public int getCiutatInicial() {
-        return ciutatInicial;
-    }
-
-    public void setCiutatInicial(int ciutatInicial) {
-        this.ciutatInicial = ciutatInicial;
     }
 
     /**
